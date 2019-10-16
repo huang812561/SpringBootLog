@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <springProperty scope="context" name="project_name" source="spring.application.name" />
+    <!-- 控制台输出 -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <!--格式化输出：%d表示日期，%thread表示线程名，%-5level：级别从左显示5个字符宽度%msg：日志消息，%n是换行符 -->
+            <pattern>%yellow(%date{yyyy-MM-dd HH:mm:ss}) | %highlight(%-5level) | %blue(%thread) | %blue(%file:%line) | %green(%logger) | %cyan(%msg%n)</pattern>
+        </encoder>
+    </appender>
+
+    <!--定义日志文件的存储地址 勿在 LogBack 的配置中使用相对路径 -->
+    <appender name="FILEINFOLOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!--LevelFilter： 级别过滤器，根据日志级别进行过滤。如果日志级别等于配置级别，过滤器会根据onMath 和 onMismatch接收或拒绝日志
+            DENY，NEUTRAL，ACCEPT其中之一。返回DENY，日志将立即被抛弃不再经过其他过滤器；
+                                          返回NEUTRAL，有序列表里的下个过滤器过接着处理日志；
+                                          返回ACCEPT，日志会被立即处理，不再经过剩余过滤器。-->
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>    <!--设置过滤级别-->
+            <onMatch>NEUTRAL</onMatch>     <!--用于配置符合过滤条件的操作-->
+            <onMismatch>ACCEPT</onMismatch>     <!--用于配置不符合过滤条件的操作-->
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>/opt/spring_app_logs/${project_name}/infoLogFile-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>20MB</maxFileSize>
+            <maxHistory>10</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%date %level [%thread] %logger{10} [%file:%line] %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="FILEERRORLOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!--ThresholdFilter： 临界值过滤器，过滤掉低于指定临界值的日志-->
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+        <!--滚动策略-->
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>/opt/spring_app_logs/${project_name}/errorLogFile-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>20MB</maxFileSize>
+            <maxHistory>10</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%date %level [%thread] %logger{10} [%file:%line] %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- 日志输出级别 -->
+    <springProfile name="dev">
+        <root level="info">
+            <appender-ref ref="STDOUT" />
+        </root>
+    </springProfile>
+
+    <!-- 日志输出级别 -->
+    <springProfile name="test">
+        <root level="info">
+            <appender-ref ref="FILEINFOLOG" />
+            <appender-ref ref="FILEERRORLOG" />
+            <appender-ref ref="STDOUT" />
+        </root>
+    </springProfile>
+
+</configuration>
